@@ -1,3 +1,5 @@
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/deskcommcrm-1?utm_medium=integration&utm_source=button&utm_campaign=deskcommcrm)
+
 # DeskcommCRM on Railway
 
 [DeskcommCRM](https://github.com/melgarafael/DeskcommCRM) (MIT) as a Railway template: the open-source sales CRM for businesses that sell over WhatsApp, with AI agents that answer, qualify and follow up, plus the self-hosted Supabase it runs on. Every service except Redis builds from this repository, so when `main` moves to a newer DeskcommCRM release, Railway offers the update to everyone who deployed the template.

@@ -2,6 +2,11 @@
 
 Breaking changes are listed first in each entry. Read the entry before you apply an update on Railway.
 
+## 1.121.0-1 (2026-11-21): Deploy on Railway button
+
+- No change to the deployed services. The README now starts with the Deploy on Railway button for the published template `deskcommcrm-1`.
+- The `DeskcommCRM` app image now takes `psql` from the pinned `postgres:17.7-alpine3.22` image instead of installing it with `apk` (same psql 17 client; the build no longer needs a package mirror).
+
 ## 1.121.0 (2026-11-21): first release
 
 - DeskcommCRM v1.121.0: app `ghcr.io/melgarafael/deskcommcrm:1.121.0`, worker `ghcr.io/melgarafael/deskcomm-worker:1.121.0`, scheduler `ghcr.io/melgarafael/deskcomm-scheduler:1.121.0`, each pinned by digest.
