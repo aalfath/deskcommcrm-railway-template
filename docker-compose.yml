@@ -1,0 +1,107 @@
+# Local test of the template: the same services, Dockerfiles and variables as on Railway.
+#   docker compose up -d --build
+# then open http://localhost:3000 and sign in as owner@example.com / local-test-password.
+# Values here are for local tests only; on Railway every secret is generated per deployment.
+x-secrets: &secrets
+  JWT_SECRET: local-test-jwt-secret-0000000000000000000000000000000000
+  POSTGRES_PASSWORD: local-test-postgres-password-000000
+name: deskcommcrm-local
+services:
+  postgres:
+    build: ./db
+    environment:
+      POSTGRES_PASSWORD: local-test-postgres-password-000000
+    volumes: [db:/var/lib/postgresql/data]
+  auth:
+    build: ./auth
+    environment:
+      <<: *secrets
+      POSTGRES_HOST: postgres
+      API_EXTERNAL_URL: http://localhost:8000/auth/v1
+      SITE_URL: http://localhost:3000
+      ADDITIONAL_REDIRECT_URLS: http://localhost:3000/**
+  rest:
+    build: ./rest
+    environment:
+      PGRST_DB_URI: postgres://authenticator:local-test-postgres-password-000000@postgres:5432/postgres
+      PGRST_JWT_SECRET: local-test-jwt-secret-0000000000000000000000000000000000
+  realtime:
+    build: ./realtime
+    environment:
+      JWT_SECRET: local-test-jwt-secret-0000000000000000000000000000000000
+      DB_HOST: postgres
+      DB_PASSWORD: local-test-postgres-password-000000
+      DB_ENC_KEY: 0123456789abcdef
+      SECRET_KEY_BASE: local-test-secret-key-base-000000000000000000000000000000000000000
+  storage:
+    build: ./storage
+    environment:
+      <<: *secrets
+      POSTGRES_HOST: postgres
+      REST_HOST: rest
+      STORAGE_PUBLIC_URL: http://localhost:8000
+    volumes: [storage:/var/lib/storage]
+  supabase:
+    build: ./gateway
+    environment:
+      JWT_SECRET: local-test-jwt-secret-0000000000000000000000000000000000
+      SUPABASE_PUBLIC_URL: http://localhost:8000
+      AUTH_HOST: auth
+      REST_HOST: rest
+      REALTIME_HOST: realtime
+      STORAGE_HOST: storage
+    ports: ["8000:8000"]
+  redis:
+    image: redis:8.2.3-alpine
+    command: ["redis-server", "--requirepass", "local-test-redis-password"]
+  srh:
+    build: ./srh
+    environment:
+      SRH_TOKEN: local-test-srh-token-00000000000000000000000000000000
+      SRH_CONNECTION_STRING: redis://default:local-test-redis-password@redis:6379
+  waha:
+    build: ./waha
+    environment:
+      WAHA_API_KEY: local-test-waha-key-000000000000000000000000000000000
+      WAHA_HMAC_SECRET: local-test-waha-hmac-0000000000000000000000000000000
+      DESKCOMM_APP_HOST: deskcommcrm
+    volumes: [waha:/app/.sessions]
+  deskcommcrm:
+    build: ./app
+    environment: &app
+      JWT_SECRET: local-test-jwt-secret-0000000000000000000000000000000000
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:8000
+      SUPABASE_SERVER_URL: http://supabase:8000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      SUPABASE_DB_URL: postgresql://postgres:local-test-postgres-password-000000@postgres:5432/postgres
+      INTERNAL_SECRET: local-test-internal-secret-000000000000000000000000000
+      CPF_ENCRYPTION_KEY: bG9jYWwtdGVzdC1vbmx5LWNwZi1rZXktMzJieXRlczA=
+      AI_CRED_AES_KEY: bG9jYWwtdGVzdC1vbmx5LWFpLWtleS0zMi1ieXRlczA=
+      WAHA_BYO_ENCRYPTION_KEY: bG9jYWwtdGVzdC1vbmx5LWtleS0zMi1ieXRlcy0wMDA=
+      NUVEMSHOP_OAUTH_ENCRYPTION_KEY: 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+      IMPERSONATE_COOKIE_SECRET: local-test-impersonate-secret-0000000000000000000000
+      LGPD_SIGNING_KEY: local-test-lgpd-signing-key-0000000000000000000000000
+      WAHA_API_BASE_URL: http://waha:3000
+      WAHA_API_KEY: local-test-waha-key-000000000000000000000000000000000
+      WAHA_HMAC_SECRET: local-test-waha-hmac-0000000000000000000000000000000
+      WAHA_WEBHOOK_BASE_URL: http://deskcommcrm:3000
+      UPSTASH_REDIS_REST_URL: http://srh:80
+      UPSTASH_REDIS_REST_TOKEN: local-test-srh-token-00000000000000000000000000000000
+      OWNER_EMAIL: owner@example.com
+      OWNER_PASSWORD: local-test-password
+    ports: ["3000:3000"]
+  worker:
+    build: ./worker
+    environment: *app
+  scheduler:
+    build: ./scheduler
+    environment:
+      INTERNAL_SECRET: local-test-internal-secret-000000000000000000000000000
+      DESKCOMM_APP_ORIGIN: http://deskcommcrm:3000
+volumes:
+  db:
+  storage:
+  waha:
+networks:
+  default:
+    enable_ipv6: true
